@@ -1,6 +1,6 @@
 # GAN Learning Project
 
-这是一个用于学习生成对抗网络（GAN）的项目，包含了传统的 DCGAN 以及参考了 StyleGAN 思路的升级版 GAN。项目还为这两种 GAN 模型分别提供了 SEFA（StyleGAN Embedding Factor Analysis）脚本，用于潜在空间的因子分析和图像生成。
+这是一个用于学习生成对抗网络（GAN）的项目，包含了传统的 DCGAN 以及参考了 StyleGAN 思路的升级版 GAN。项目还为这两种 GAN 模型分别提供了 SEFA（Semantic Factorization）脚本，用于潜在空间的因子分析和图像生成。
 
 ## 目录
 
@@ -20,7 +20,7 @@
   - [Streamlit 可视化](#streamlit-可视化)
 - [贡献](#贡献)
 
-~~~~
+
 ## 项目简介
 
 本项目旨在深入学习和实践生成对抗网络（GAN）的各种架构和技术。项目包含以下主要组件：
