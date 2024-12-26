@@ -15,6 +15,7 @@
   - [升级版 GAN（参考 StyleGAN）](#升级版-gan参考-stylegan)
     - [训练升级版 GAN](#训练升级版-gan)
     - [运行 SEFA 脚本](#运行-sefa-脚本-1)
+  - [评估生成器](#评估生成器)
 - [SEFA 方法详解](#sefa-方法详解)
 - [Adv_SeFa 可视化工具使用指南](#adv_sefa-可视化工具使用指南)
   - [Streamlit 可视化](#streamlit-可视化)
@@ -62,6 +63,7 @@
 | `Adv_SeFa.py`          | SEFA 脚本的 Streamlit 可视化应用            |
 | `GAN.py`               | 传统 DCGAN 的训练和生成脚本                   |
 | `New_GAN.py`           | 升级版 GAN 的训练和生成脚本                   |
+| `evaluate_gan.py`      | 评估生成器性能的脚本                          |
 | `sefa.py`              | 传统 DCGAN 的 SEFA 分析脚本                   |
 | `requirements.txt`     | 项目的依赖包列表                              |
 | `README.md`            | 项目说明文档                                  |
@@ -138,6 +140,62 @@
 streamlit run Adv_SeFa.py
 ```
 打开浏览器访问提示的本地地址，即可通过交互式界面进行 SEFA 分析和图像生成。
+
+### 评估生成器
+
+本项目提供了脚本 `evaluate_gan.py` 用于评估多个训练完成的 GAN 模型，计算 Inception Score (IS), Frechet Inception Distance (FID) 以及 Kernel Inception Distance (KID)。
+
+#### 评估指标解释
+
+- **Inception Score (IS)**：
+  - 衡量生成图像的质量和多样性。
+  - 分数越高，表示生成的图像在类别上的多样性越高，质量越好。
+
+- **Frechet Inception Distance (FID)**：
+  - 衡量生成图像与真实图像之间的距离。
+  - 分数越低越好，表示生成的图像分布越接近真实图像分布。
+
+- **Kernel Inception Distance (KID)**：
+  - 也是衡量生成图像质量的指标，类似于 FID。
+  - 分数越低越好，表示生成图像与真实图像在特征空间中的距离越小。
+
+#### 运行评估脚本
+
+1. **确保已训练并保存生成器权重**
+
+    生成器权重应保存在 `snapshots/` 或 `adv_snapshots/` 目录下。
+
+2. **运行评估脚本**
+
+    ```bash
+    python evaluate_gan.py \
+        --generators "GAN.Gnet:snapshots/gnet.pth:generated_images_gan" \
+                     "New_GAN.AdvancedGnet:adv_snapshots/adv_gnet.pth:generated_images_new_gan" \
+        --real_images face/face/ \
+        --num_images 1000 \
+        --batch_size 32 \
+        --device cuda
+    ```
+
+    **参数说明**：
+    
+    - `--generators`: 生成器的规范列表，格式为 `"module.class:path_to_weights:generated_dir"`。
+      - `module.class`: 生成器类的模块和类名，如 `GAN.Gnet` 或 `New_GAN.AdvancedGnet`。
+      - `path_to_weights`: 生成器权重文件的路径。
+      - `generated_dir`: 生成的图像保存的目录。
+    - `--real_images`: 真实图像的文件夹路径。
+    - `--num_images`: 要生成用于评估的图像数量。
+    - `--batch_size`: 批量大小。
+    - `--device`: 使用的设备（`cuda` 或 `cpu`）。
+
+    **示例**：
+    
+    ```bash
+    python evaluate_gan.py --generators "GAN.Gnet:snapshots/gnet.pth:generated_images_gan" "New_GAN.AdvancedGnet:adv_snapshots/adv_gnet.pth:generated_images_new_gan" --real_images face/face/ --num_images 1000 --batch_size 32 --device cuda
+    ```
+
+    脚本将生成指定数量的图像，并保存在 `generated_images_gan` 和 `generated_images_new_gan` 目录下，然后计算 Inception Score、FID 和 KID，并输出评估结果。
+
 ## SEFA 方法详解
 
 ### 什么是 SEFA？
@@ -183,7 +241,7 @@ streamlit run Adv_SeFa.py
 
 **Adv_SeFa** 提供了基于 **Streamlit** 的交互式可视化工具，用于展示和操控 SEFA 分析的结果。以下是如何使用该工具的详细说明。
 
-### Streamlit 可视化
+### Streamlit 可视化   
 
 **Streamlit** 是一个用于构建数据应用的 Python 库，允许您快速创建交互式网页应用。
 
