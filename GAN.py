@@ -15,7 +15,6 @@ from scipy.stats import entropy
 class Config():
     result_save_path = 'results/'  # 生成图像保存的路径
     gif_save_path = 'gif_results/'  # GIF图像保存的路径
-    evaluate_save_path = 'evaluate_results/'
     d_net_path = 'snapshots/dnet.pth'  # 判别网络权重文件保存的路径
     g_net_path = 'snapshots/gnet.pth'  # 生成网络权重文件保存的路径
     img_path = 'face/'  # 源图像文件路径
@@ -35,8 +34,6 @@ if not os.path.exists('snapshots'):
     os.mkdir('snapshots')
 if not os.path.exists(opt.gif_save_path):
     os.mkdir(opt.gif_save_path)
-if not os.path.exists(opt.evaluate_save_path):
-    os.mkdir(opt.evaluate_save_path)
 #---------------------------------2.生成网络设计----------------------------------#
 class Gnet(nn.Module):
     def __init__(self, opt):
