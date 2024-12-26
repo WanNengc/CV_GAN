@@ -18,7 +18,7 @@ from tqdm import tqdm
 import argparse
 import torchvision.utils as vutils
 
-# ======== 1. 从自己的项目中导入 opt / adv_opt 等配置 (示例) ========
+# ======== 1. 导入配置  ========
 from GAN import opt  # 基础配置
 from New_GAN import adv_opt  # 高级配置
 
@@ -234,7 +234,7 @@ def evaluate_gan(generator, device, num_images, batch_size, generated_dir, real_
     with torch.no_grad():
         for i in tqdm(range(0, num_images, batch_size), desc="Generating Images"):
             current_batch_size = min(batch_size, num_images - i)
-            # 假设gan输入是 (batch_size, 100, 1, 1)
+
             noise = torch.randn(current_batch_size, 100, 1, 1, device=device)
             fake_images = generator(noise).cpu()
             save_generated_images(fake_images, generated_dir, img_size=64)
