@@ -112,7 +112,7 @@ def main():
     # 初始化生成器并加载预训练权重
     generator = AdvancedGnet(opt=config).to(device)
     try:
-        generator.load_state_dict(torch.load(model_path, map_location=device))
+        generator.load_state_dict(torch.load(model_path,weights_only=True, map_location=device))
         st.write(f"Loaded generator model from '{model_path}'.")
     except Exception as e:
         st.error(f"Error loading model: {e}")
