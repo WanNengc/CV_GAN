@@ -7,7 +7,7 @@ from PIL import Image
 from GAN import Gnet
 
 
-# 自定义 HTML 可视化工具
+# Custom HTML visualization tool
 class HtmlPageVisualizer:
     def __init__(self, num_rows, num_cols, viz_size=256):
         self.num_rows = num_rows
@@ -58,24 +58,24 @@ class HtmlPageVisualizer:
             f.write('</table></body></html>')
 
 
-# 图像后处理函数
+# Image post-processing function
 def postprocess(image_tensor):
     """
-    将生成的图像张量转换为可视化格式。
+    Convert the generated image tensor to a visualizable format.
     """
     images = []
     for img in image_tensor:
         img = img.detach().cpu().numpy()
-        img = ((img + 1) / 2 * 255).astype(np.uint8)  # 将值映射到 [0, 255]
-        img = np.transpose(img, (1, 2, 0))  # 转换为 HWC 格式
+        img = ((img + 1) / 2 * 255).astype(np.uint8)  # Map values to [0, 255]
+        img = np.transpose(img, (1, 2, 0))  # Convert to HWC format
         images.append(Image.fromarray(img))
     return images
 
 
-# 权重分解函数
+# Weight factorization function
 def factorize_dcgans(generator):
     """
-    对 DCGAN 的生成器权重进行分解以发现潜在语义方向。
+    Factorize the generator weights of DCGAN to discover potential semantic directions.
     """
     weights = generator.generate[0].weight.data
     weights_flat = weights.view(weights.size(0), -1).cpu().numpy()
@@ -85,53 +85,53 @@ def factorize_dcgans(generator):
     return boundaries, values
 
 
-# 潜在向量操控与图像生成函数
+# Latent vector manipulation and image generation function
 def generate_with_sefa(generator, boundaries, values, opt):
     """
-    使用 SeFa 方法在 DCGAN 的潜在空间中操控并生成图像。
+    Use the SeFa method to manipulate the latent space of DCGAN and generate images.
     """
     device = next(generator.parameters()).device
 
-    # 随机生成潜在向量，平均多组随机潜在向量以提高稳定性
+    # Randomly generate latent vectors, averaging multiple sets of random latent vectors for stability
     codes = torch.mean(torch.stack([torch.randn(opt.num_samples, opt.noise_dim).to(device) for _ in range(5)]), dim=0)
 
-    # 操控距离（扩大范围）
+    # Manipulation distances (expand the range)
     distances = np.linspace(opt.start_distance, opt.end_distance, opt.step)
 
-    # 保存结果的 HTML 页面初始化
+    # Initialize HTML page for saving results
     vizer = HtmlPageVisualizer(num_rows=opt.num_semantics, num_cols=len(distances) + 1, viz_size=opt.viz_size)
     headers = [''] + [f'Distance {d:.2f}' for d in distances]
     vizer.set_headers(headers)
 
-    # 遍历语义方向和距离进行生成
+    # Iterate over semantic directions and distances to generate images
     for sem_id in tqdm(range(opt.num_semantics), desc='Semantic '):
-        boundary = boundaries[sem_id] * 2.0  # 放大边界的影响
+        boundary = boundaries[sem_id] * 2.0  # Amplify the effect of boundaries
         vizer.set_cell(sem_id, 0, text=f'Semantic {sem_id:03d} ({values[sem_id]:.3f})', highlight=True)
 
         for col_id, d in enumerate(distances, start=1):
             temp_code = codes.clone()
-            temp_code += boundary * d  # 操控潜在向量
-            temp_code = temp_code.unsqueeze(-1).unsqueeze(-1)  # 调整形状以适配生成器输入
+            temp_code += boundary * d  # Manipulate the latent vector
+            temp_code = temp_code.unsqueeze(-1).unsqueeze(-1)  # Adjust shape to fit the generator input
 
-            # 通过生成器生成图像
+            # Generate the image using the generator
             fake_image = generator(temp_code)
-            fake_image = postprocess(fake_image)[0]  # 图像后处理
+            fake_image = postprocess(fake_image)[0]  # Image post-processing
 
-            # 保存图像到相对路径（HTML 引用使用相对路径）
+            # Save image to relative path (HTML uses relative paths)
             image_relative_path = os.path.join(f'semantic_{sem_id}_dist_{col_id}.png')
             image_full_path = os.path.join(opt.save_dir, image_relative_path)
             fake_image.save(image_full_path)
 
-            # 设置 HTML 页面中的图像路径
+            # Set the image path in the HTML page
             vizer.set_cell(sem_id, col_id, image=image_relative_path)
 
-    # 保存结果为 HTML
+    # Save the results to an HTML file
     save_path = os.path.join(opt.save_dir, 'dcgan_sefa.html')
     vizer.save(save_path)
     print(f"Results saved to {save_path}")
 
 
-# 主函数
+# Main function
 def main():
     class Opt:
         noise_dim = 100
